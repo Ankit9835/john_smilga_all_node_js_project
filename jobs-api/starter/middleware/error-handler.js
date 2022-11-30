@@ -9,10 +9,14 @@ const errorHandlerMiddleware = (err, req, res, next) => {
   //   return res.status(err.statusCode).json({ msg: err.message })
   // }
   if(err.code && err.code == 11000){
-    customError.msg = `Duplicate value entered for ${err.keyValue.email}, please entered another value`
+    customError.msg = `Duplicate value entered for ${Object.keys(err.keyValue)}, please entered another value`
     customError.statusCode = StatusCodes.BAD_REQUEST
   }
+  if(err.name == "CastError"){
+    customError.msg = `No job found with this id ${err.value}`
+  }
   return res.status(customError.statusCode).json({ msg:customError.msg })
+  return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ err })
 }
 
 module.exports = errorHandlerMiddleware
