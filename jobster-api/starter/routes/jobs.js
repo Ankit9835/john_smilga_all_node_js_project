@@ -7,10 +7,14 @@ const {
   getAllJobs,
   updateJob,
   getJob,
+  showStats,
 } = require('../controllers/jobs')
 
-router.route('/').post(createJob).get(getAllJobs)
+const demoUser = require('../middleware/testUser')
 
-router.route('/:id').get(getJob).delete(deleteJob).patch(updateJob)
+router.route('/').post(demoUser,createJob).get(getAllJobs)
+router.route('/stats').get(showStats)
+
+router.route('/:id').get(demoUser,getJob).delete(demoUser,deleteJob).patch(demoUser,updateJob)
 
 module.exports = router
