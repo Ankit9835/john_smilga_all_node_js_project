@@ -1,26 +1,71 @@
-const createProduct = (req,res) => {
-    res.send('create product')
+const Product = require('../models/Product')
+const Review = require('../models/Review')
+const {StatusCodes} = require('http-status-codes')
+const CustomError = require('../errors')
+const path = require('path')
+
+const createProduct = async (req,res) => {
+    req.body.user = req.user.userId
+    const product = await Product.create(req.body)
+    res.status(StatusCodes.CREATED).json({product})
 }
 
-const getAllProducts = (req,res) => {
-    res.send('get all products')
+const getAllProducts = async (req,res) => {
+    const product = await Product.find({})
+    res.status(StatusCodes.OK).json({product})
 }
 
-const getSingleProduct = (req,res) => {
-    res.send('single product')
+const getSingleProduct = async (req,res) => {
+    const {id:productId} = req.params
+    const product = await Product.findOne({_id:productId}).populate('reviews')
+    if(!product){
+        throw new CustomError.BadRequestError(`No Product found for this ${productId}`)
+    }
+    res.status(StatusCodes.OK).json({product})
 }
 
-const updateProduct = (req,res) => {
-    res.send('update product')
+const updateProduct = async (req,res) => {
+    const {id:productId} = req.params
+    const product = await Product.findByIdAndUpdate({_id:productId},req.body,{new:true,runValidators:true})
+    if(!product){
+        throw new CustomError.NotFoundError(`No Product found with this ${productId}`)
+    }
+    res.status(StatusCodes.OK).json({product})
 }
 
-const deleteProduct = (req,res) => {
-    res.send('delete product')
+const deleteProduct = async (req,res) => {
+    const {id:productId} = req.params
+    const product = await Product.findOne({_id:productId})
+    if(!product){
+        throw new CustomError.NotFoundError(`No Product found with this ${productId}`)
+    }
+    await product.remove()
+    res.status(StatusCodes.OK).json({msg:'product removed successfully'})
 }
 
-const uploadImage = (req,res) => {
-    res.send('upload image')
+const uploadImage = async (req,res) => {
+    if(!req.files){
+        throw new CustomError.BadRequestError('No File Uploaded')
+    }
+    const productImages = req.files.image
+    if(!productImages.mimetype.startsWith('image')){
+        throw new CustomError.BadRequestError('Please upload image')
+    }
+    const maxSize = 1024 * 1024
+    if(productImages.size > maxSize){
+        throw new CustomError.BadRequestError('please upload image of max 1 MB')
+    }
+    const imagePath = path.join(__dirname,'../public/uploads/' + `${productImages.name}`)
+    await productImages.mv(imagePath)
+    res.status(StatusCodes.OK).json({image:`/uploads/${productImages.name}`})
 }
+
+const getSingleProductReviews = async (req,res) => {
+    const {id:productId} = req.params
+    const review = await Review.find({product:productId})
+    res.status(StatusCodes.OK).json({review, count:review.length})
+}
+
 
 module.exports = {
     createProduct,
@@ -28,5 +73,6 @@ module.exports = {
     getSingleProduct,
     updateProduct,
     deleteProduct,
-    uploadImage
+    uploadImage,
+    getSingleProductReviews 
 }
