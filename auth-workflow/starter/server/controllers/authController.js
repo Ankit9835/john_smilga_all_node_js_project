@@ -65,6 +65,7 @@ const login = async (req, res) => {
   }
   const user = await User.findOne({ email });
 
+
   if (!user) {
     throw new CustomError.UnauthenticatedError('Invalid Credentials');
   }
@@ -75,7 +76,7 @@ const login = async (req, res) => {
   if(!user.isVerified){
     throw new CustomError.UnauthenticatedError('please varify your email first')
   }
-  
+
   const tokenUser = createTokenUser(user);
   let refreshToken = '';
   refreshToken = crypto.randomBytes(40).toString('hex')
