@@ -44,7 +44,6 @@ const register = async (req, res) => {
 const verifyEmail = async (req,res) => {
   const {verificationToken,email} = req.body
   const user = await User.findOne({email})
-  console.log(user)
   if(!user){
     throw new CustomError.UnauthenticatedError('Email not found for this user')
   }
